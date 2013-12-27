@@ -88,6 +88,10 @@ if __name__ == '__main__':
                     action="store_true", dest="load", default=False,
                     help="load measurements into database")
 
+  parser.add_option("-o", "--ocean",
+                    action="store_true", dest="ocean", default=False,
+                    help="check measurements against ocean area")
+
   (options, args) = parser.parse_args()
 
   if options.load:
@@ -105,14 +109,25 @@ if __name__ == '__main__':
   db = connection.safecast
   locations = db.locations
 
+  # GeoJSON countries
+  # from: https://github.com/johan/world.geo.json/blob/master/countries.geo.json
+  #
+  # GeoJSON ocean
+  # from: ogr2ogr -f GeoJSON ocean.geo.json ne_110m_ocean.shp
+  #       (http://www.naturalearthdata.com/downloads/110m-physical-vectors/)
+
+  if options.ocean:
+    countries = json.loads(open("ocean.geo.json").read())["features"]
+    csvfilename = "summary-ocean.csv"
+  else:
+    countries = json.loads(open("countries.geo.json").read())["features"]
+    csvfilename = "summary.csv"
+
   # Write output to CSV file
-  csvfile = open("summary.csv", "wb")
+  csvfile = open(csvfilename, "wb")
   writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
   writer.writerow(["Country name", "Measurements"])
 
-  # GeoJSON countries
-  # from: https://github.com/johan/world.geo.json/blob/master/countries.geo.json
-  countries = json.loads(open("countries.geo.json").read())["features"]
   for country in countries:
     totalcount = 0
     name = country["properties"]["name"]
@@ -120,16 +135,11 @@ if __name__ == '__main__':
     polygonType = country["geometry"]["type"]
 
     print "Processing %s [%d] ..." % (name, len(polygonList))
-    if polygonType == "Polygon":
-      polygon = polygonList[0]
+    for polygon in polygonList:
+      if len(polygon) == 1:
+        polygon = polygon[0]
       cursors = locations.find({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
-      totalcount = cursors.count()
-    else:
-      for polygon in polygonList:
-        if len(polygon) == 1:
-          polygon = polygon[0]
-        cursors = locations.find({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
-        totalcount = totalcount + cursors.count()
+      totalcount = totalcount + cursors.count()
 
     if totalcount > 0:
       writer.writerow([name, totalcount])
