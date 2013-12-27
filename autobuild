@@ -1,0 +1,8 @@
+#!/bin/bash
+today="$(date +%y%m%d)"
+
+# Download the safecast dataset
+wget https://api.safecast.org/system/measurements.csv -O ${today}_measurements.csv
+
+# Compute the summary
+python safecastSummary.py -l ${today}_measurements.csv
