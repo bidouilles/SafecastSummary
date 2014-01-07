@@ -63,11 +63,15 @@ def loadMeasurements(datafile):
     locations.insert(insertList)
   print "%d measurements processed (%d failed)" % (count, failedCount)
 
+  cursors = locations.find()
+  print "%d measurements in database" % (cursors.count())
+
   print "Creating index ..."
   # locations.create_index([("loc", pymongo.GEOSPHERE)])
   locations.create_index([('loc', pymongo.GEO2D)])
-  connection.disconnect()
   print "Done."
+
+  connection.disconnect()
 
 # -----------------------------------------------------------------------------
 # Swap the latitude and longitude from the polygon provided from GeoJSON
@@ -87,10 +91,12 @@ if __name__ == '__main__':
   parser.add_option("-l", "--load",
                     action="store_true", dest="load", default=False,
                     help="load measurements into database")
-
   parser.add_option("-o", "--ocean",
                     action="store_true", dest="ocean", default=False,
                     help="check measurements against ocean area")
+  parser.add_option("-d", "--debug",
+                    action="store_true", dest="debug", default=False,
+                    help="generate debug information (will modify database)")
 
   (options, args) = parser.parse_args()
 
@@ -147,8 +153,20 @@ if __name__ == '__main__':
         polygon.append(polygon[0])
       cursors = locations.find({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
       totalcount = totalcount + cursors.count()
+      if options.debug:
+        locations.remove({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
 
     if totalcount > 0:
       writer.writerow([name, totalcount])
+
+  if options.debug:
+    cursors = locations.find()
+    print "%d measurements left in database" % (cursors.count())
+
+    f = open('map.csv', 'w')
+    f.write("Captured Time,Value,Unit,Longitude,Latitude\n")
+    for row in cursors:
+      f.write("0," + str(int(float(row["cpm"]))) + ",cpm," + str(row["loc"]["Longitude"]) + "," + str(row["loc"]["Latitude"])+ "\n")
+    f.close()
 
   csvfile.close()
