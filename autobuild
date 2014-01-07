@@ -8,3 +8,6 @@ tar xvfz ${today}_measurements.tgz
 
 # Compute the summary
 python safecastSummary.py -l measurements-out.csv
+
+# Render summary map
+python safecastSummaryMap.py
