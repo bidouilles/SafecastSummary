@@ -8,6 +8,8 @@ from PIL import Image, ImageChops
 import simplejson as json
 from matplotlib.collections import LineCollection
 from matplotlib import cm
+import time
+
 
 def drawMap(filename,names,totalCount):
   countries = json.loads(open(filename).read())["features"]
@@ -87,5 +89,7 @@ if __name__=='__main__':
   lgd.get_title().set_fontsize('8')
 
   # Save map
-  fig.savefig("map.png", bbox_extra_artists=(lgd,), bbox='tight')
-  trim(Image.open("map.png"), (255,255,255,255)).save("map.png")
+  mapFilename = time.strftime("%Y%m%d")+"_map"
+  fig.savefig(mapFilename+".png", bbox_extra_artists=(lgd,), bbox='tight')
+  trim(Image.open(mapFilename+".png"), (255,255,255,255)).save(mapFilename+".png")
+  Image.open(mapFilename+".png").save(mapFilename+".jpg",quality=70) # create a 70% quality jpeg
