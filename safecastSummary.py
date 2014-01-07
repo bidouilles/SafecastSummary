@@ -111,6 +111,8 @@ if __name__ == '__main__':
 
   # GeoJSON countries
   # from: https://github.com/johan/world.geo.json/blob/master/countries.geo.json
+  #       http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip
+  #       run through http://www.mapshaper.org/
   #
   # GeoJSON ocean
   # from: ogr2ogr -f GeoJSON ocean.geo.json ne_110m_ocean.shp
@@ -128,16 +130,21 @@ if __name__ == '__main__':
   writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
   writer.writerow(["Country name", "Measurements"])
 
+  cursors = locations.find()
+  print "%d measurements in database" % (cursors.count())
+
   for country in countries:
     totalcount = 0
     name = country["properties"]["name"]
     polygonList = country["geometry"]["coordinates"]
     polygonType = country["geometry"]["type"]
 
-    print "Processing %s [%d] ..." % (name, len(polygonList))
+    print "Processing %s [%d] ..." % (unicode(name).encode("utf-8"), len(polygonList))
     for polygon in polygonList:
       if len(polygon) == 1:
         polygon = polygon[0]
+      if polygon[0] != polygon[-1]:
+        polygon.append(polygon[0])
       cursors = locations.find({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
       totalcount = totalcount + cursors.count()
 
