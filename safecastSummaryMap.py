@@ -46,8 +46,12 @@ def drawMap(filename,names,totalCount):
     lines.set_edgecolors('k')
     lines.set_linewidth(0.5)
 
+    # import brewer2mpl
+    # colormap = brewer2mpl.get_map('Paired', 'qualitative', 8).mpl_colors
+    colormap = [(0.6509803921568628, 0.807843137254902, 0.8901960784313725), (0.12156862745098039, 0.47058823529411764, 0.7058823529411765), (0.6980392156862745, 0.8745098039215686, 0.5411764705882353), (0.2, 0.6274509803921569, 0.17254901960784313), (0.984313725490196, 0.6039215686274509, 0.6), (0.8901960784313725, 0.10196078431372549, 0.10980392156862745), (0.9921568627450981, 0.7490196078431373, 0.43529411764705883), (1.0, 0.4980392156862745, 0.0)]
+
     if name in names.keys():
-      color = cm.jet(float(names[name])/totalCount)
+      color = colormap[(int((float(names[name])/totalCount)*8)+1)]
       lines.set_label("%s (%0.1fK)" % (name, names[name]/1000.0) )
       #lines.set_label(name)
       lines.set_edgecolors(color)
@@ -74,7 +78,7 @@ if __name__=='__main__':
   totalCount = 0
   for d in data[1:]:
     country, count = d.split(",")
-    if int(count) > 100:
+    if int(count) > 10:
       names[country[1:-1]] = int(count)
       totalCount += int(count)
 
@@ -85,7 +89,7 @@ if __name__=='__main__':
   fontP = FontProperties()
   fontP.set_size('xx-small')
   lgd = plt.legend(loc='upper center', bbox_to_anchor=(0.5,-0.02), ncol=3,
-    prop = fontP, fancybox = True, title='Countries covered by Safecast')
+    prop = fontP, fancybox = True, title='%d countries covered by Safecast' % len(names))
   lgd.get_title().set_fontsize('8')
 
   # Save map
@@ -93,3 +97,5 @@ if __name__=='__main__':
   fig.savefig(mapFilename+".png", bbox_extra_artists=(lgd,), bbox='tight')
   trim(Image.open(mapFilename+".png"), (255,255,255,255)).save(mapFilename+".png")
   Image.open(mapFilename+".png").save(mapFilename+".jpg",quality=70) # create a 70% quality jpeg
+
+  print totalCount
