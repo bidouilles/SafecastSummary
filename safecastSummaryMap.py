@@ -10,6 +10,7 @@ from matplotlib.collections import LineCollection
 import matplotlib.patheffects as PathEffects
 from matplotlib import cm
 import time
+from optparse import OptionParser
 
 # Shapely
 from shapely.geometry import Polygon
@@ -64,13 +65,13 @@ def drawMap(filename,names,totalCount):
     lines.set_edgecolors('k')
     lines.set_linewidth(0.5)
 
-    # import brewer2mpl
-    # colormap = brewer2mpl.get_map('Paired', 'qualitative', 8).mpl_colors
-    colormap = [(0.6509803921568628, 0.807843137254902, 0.8901960784313725), (0.12156862745098039, 0.47058823529411764, 0.7058823529411765), (0.6980392156862745, 0.8745098039215686, 0.5411764705882353), (0.2, 0.6274509803921569, 0.17254901960784313), (0.984313725490196, 0.6039215686274509, 0.6), (0.8901960784313725, 0.10196078431372549, 0.10980392156862745), (0.9921568627450981, 0.7490196078431373, 0.43529411764705883), (1.0, 0.4980392156862745, 0.0)]
+    #import brewer2mpl
+    #colormap = brewer2mpl.get_map('Paired', 'qualitative', 12).mpl_colors
+    colormap = [(0.6509803921568628, 0.807843137254902, 0.8901960784313725), (0.12156862745098039, 0.47058823529411764, 0.7058823529411765), (0.6980392156862745, 0.8745098039215686, 0.5411764705882353), (0.2, 0.6274509803921569, 0.17254901960784313), (0.984313725490196, 0.6039215686274509, 0.6), (0.8901960784313725, 0.10196078431372549, 0.10980392156862745), (0.9921568627450981, 0.7490196078431373, 0.43529411764705883), (1.0, 0.4980392156862745, 0.0), (0.792156862745098, 0.6980392156862745, 0.8392156862745098), (0.41568627450980394, 0.23921568627450981, 0.6039215686274509), (1.0, 1.0, 0.6), (0.6941176470588235, 0.34901960784313724, 0.1568627450980392)]
 
     # Add color and label if covered by Safecast
     if name in names.keys():
-      color = colormap[(int((float(names[name][0])/totalCount)*8)+1)]
+      color = colormap[(int((float(names[name][0])/totalCount)*12)+1)]
       lines.set_label("%s - %0.1fK (%d)" % (name, names[name][0]/1000.0, names[name][1]) )
       #lines.set_label(name)
       lines.set_edgecolors(color)
@@ -92,6 +93,16 @@ def trim(im, border):
 # Main
 # -----------------------------------------------------------------------------
 if __name__=='__main__':
+  # Process command line options
+  parser = OptionParser("Usage: safecastSummaryMap.py [summary.csv]")
+  (options, args) = parser.parse_args()
+
+  if len(args) != 1:
+    summaryFile = "summary.csv"
+  else:
+    summaryFile = args[0]
+
+  # Setup the figure
   fig = figure(figsize=(12,14), dpi=300)
   ax = plt.subplot(111)
   m = Basemap(projection='robin',lon_0=0,resolution='c')
@@ -101,7 +112,7 @@ if __name__=='__main__':
   m.drawmeridians(np.arange(-180.,181.,20.), labels=[0,0,0,1], fontsize=5, dashes=[1,0], linewidth=0.2)
 
   names = {}
-  data = open("summary.csv", "r").readlines()
+  data = open(summaryFile, "r").readlines()
   totalCount = 0
   countryCount = 0
   for d in data[1:]:
@@ -122,9 +133,11 @@ if __name__=='__main__':
   lgd.get_title().set_fontsize('8')
 
   # Save map
-  mapFilename = time.strftime("%Y%m%d")+"_map"
-  fig.savefig(mapFilename+".png", bbox_extra_artists=(lgd,), bbox='tight', dpi=300)
-  trim(Image.open(mapFilename+".png"), (255,255,255,255)).save(mapFilename+".png")
+  #mapFilename = time.strftime("%Y%m%d")+"_map"
+  mapFilename = "map"
+  fig.savefig(mapFilename+".png", bbox_extra_artists=(lgd,), transparent=True, bbox='tight', dpi=300)
+  fig.savefig(mapFilename+".svg", bbox_extra_artists=(lgd,), transparent=True, bbox_inches='tight', pad_inches=0.25)
+  trim(Image.open(mapFilename+".png"), (255,255,255,0)).save(mapFilename+".png")
   Image.open(mapFilename+".png").save(mapFilename+".jpg",quality=70) # create a 70% quality jpeg
 
   print "Total measurements =", totalCount

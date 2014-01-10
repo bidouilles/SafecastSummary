@@ -1,13 +1,19 @@
 #!/bin/bash
-today="$(date +%y%m%d)"
+today="$(date +%Y%m%d)"
+folder=${PWD}
+
+# Make sure output folder is ready
+mkdir -p $folder/results
 
 # Download the safecast dataset
 wget https://api.safecast.org/system/measurements.tar.gz -O ${today}_measurements.tgz
-rm -rf  measurements-out.csv 
+rm -rf  measurements-out.csv
 tar xvfz ${today}_measurements.tgz
 
 # Compute the summary
-python safecastSummary.py -l measurements-out.csv
+time python safecastSummary.py -l measurements-out.csv
 
 # Render summary map
-python safecastSummaryMap.py
+cp summary.csv $folder/results/${today}_summary.csv
+time python safecastSummaryMap.py $folder/results/${today}_summary.csv
+for f in map.* ; do mv "$f" $folder/results/${today}_$f ; done
