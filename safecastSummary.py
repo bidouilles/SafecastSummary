@@ -151,8 +151,12 @@ if __name__ == '__main__':
         polygon = polygon[0]
       if polygon[0] != polygon[-1]:
         polygon.append(polygon[0])
-      cursors = locations.find({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
-      totalcount = totalcount + cursors.count()
+      try:
+        cursors = locations.find({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
+        totalcount = totalcount + cursors.count()
+      except:
+        print " - Polygon error !!!"
+        continue
       if options.debug:
         locations.remove({'loc': {'$within': {"$polygon": swapCoordinates(polygon)}}})
 

@@ -1,9 +1,11 @@
 #!/bin/bash
+cd /home/lionel/development/python/interpolation/SafecastSummary
+
 today="$(date +%Y%m%d)"
 folder=${PWD}
 
 # Make sure output folder is ready
-mkdir -p $folder/results
+mkdir -p ${folder}/results
 
 # Download the safecast dataset
 wget https://api.safecast.org/system/measurements.tar.gz -O ${today}_measurements.tgz
@@ -14,6 +16,11 @@ tar xvfz ${today}_measurements.tgz
 time python safecastSummary.py -l measurements-out.csv
 
 # Render summary map
-cp summary.csv $folder/results/${today}_summary.csv
-time python safecastSummaryMap.py $folder/results/${today}_summary.csv
-for f in map.* ; do mv "$f" $folder/results/${today}_$f ; done
+time python safecastSummaryMap.py summary.csv
+#safecastSummaryPublish.py summary.csv
+cp summary.csv ${folder}/results/${today}_summary.csv
+#for i in map.* ; do mv "$i" ${folder}/results/${today}_$i ; done
+mv map.jpg ${folder}/results/${today}_map.jpg
+mv map.svg ${folder}/results/${today}_map.svg
+zip -9 ${folder}/results/${today}_map.svg.zip ${folder}/results/${today}_map.svg
+rm ${folder}/results/${today}_map.svg

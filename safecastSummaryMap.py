@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import matplotlib as mpl
+mpl.use('Agg')
+
 from pylab import *
 from mpl_toolkits.basemap import Basemap
 from matplotlib.font_manager import FontProperties
@@ -117,7 +120,7 @@ if __name__=='__main__':
   countryCount = 0
   for d in data[1:]:
     country, count = d.split(",")
-    if int(count) > 10:
+    if int(count) > 200:
       countryCount+=1
       names[country[1:-1]] = (int(count), countryCount)
       totalCount += int(count)
